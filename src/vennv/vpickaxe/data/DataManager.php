@@ -130,7 +130,7 @@ class DataManager {
         foreach ($data as $value) {
             if (count(explode($text, $value)) > 1) {
                 $stats = ["%owner%", "%level%", "%exp%", "%next_exp%", "%next_level%"];
-                $replace = [self::getOwner($item), self::getLevel($item), self::getExp($item), self::getNextExp($item), self::getNextLevel($item)];
+                $replace = [self::getOwner($item), self::getLevel($item), round(self::getExp($item), 2), self::getNextExp($item), self::getNextLevel($item)];
                 return str_replace($stats, $replace, $value);
             }
         }
