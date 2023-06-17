@@ -20,6 +20,7 @@
 
 namespace vennv\vpickaxe\data;
 
+use pocketmine\item\Durable;
 use pocketmine\lang\KnownTranslationFactory;
 use pocketmine\console\ConsoleCommandSender;
 use pocketmine\item\Item;
@@ -126,6 +127,10 @@ class DataManager {
                 $lore[$key] = self::checkLore($item, $value);
             }
             $item->setLore($lore);
+
+            if ($item instanceof Durable) {
+                $item->setUnbreakable(true);
+            }
 
             $player->getInventory()->addItem($item);
 
@@ -282,6 +287,9 @@ class DataManager {
         }
     }
 
+    /**
+     * @throws \Throwable
+     */
     public static function onBreak(Player $player) : void {
         $fiber = new \Fiber(function() use ($player) {
             $item = $player->getInventory()->getItemInHand();
