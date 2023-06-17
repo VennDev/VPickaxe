@@ -1,4 +1,5 @@
 # VPickaxe
+<img src="https://github.com/VennDev/VPickaxe/blob/main/icon.png" alt="VPickaxe" height="200" width="300" />
 - This is Plugin VPickaxe for PocketMine-PMMP 5.x
 - This Pickaxe makes your server experience even better with the levels that this plugin brings.
 
