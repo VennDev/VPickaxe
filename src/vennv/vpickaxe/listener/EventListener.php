@@ -31,14 +31,32 @@ class EventListener implements Listener {
 
     }
 
+    /**
+     * @throws \JsonException
+     */
     public function onJoin(PlayerJoinEvent $event): void {
         $player = $event->getPlayer();
         DataManager::getPickaxe($player);
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function onBreak(BlockBreakEvent $event): void {
         $player = $event->getPlayer();
-        DataManager::updateStats($player);
+        $item = $player->getInventory()->getItemInHand();
+        $hasPickaxe = DataManager::hasPickaxe($player);
+        if ($hasPickaxe) {
+            $isPickaxe = DataManager::isPickaxe($item);
+            if ($isPickaxe) {
+                $xuid = $player->getXuid();
+                if ($xuid == DataManager::getXuid($item)) {
+                    DataManager::updateStats($player);
+                } else {
+                    $event->cancel();
+                }
+            }
+        }
     }
 
 }

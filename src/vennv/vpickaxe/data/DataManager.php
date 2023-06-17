@@ -46,6 +46,16 @@ class DataManager {
         return $item;
     }
 
+    public static function getXuid(Item $item): string {
+        return $item->getNamedTag()->getString("xuid");
+    }
+
+    public static function setXuid(Item $item, string $xuid): Item {
+        $item->getNamedTag()->setString("xuid", $xuid);
+        $item->setNamedTag($item->getNamedTag());
+        return $item;
+    }
+
     public static function getLevel(Item $item): int {
         return $item->getNamedTag()->getInt("level");
     }
@@ -109,6 +119,7 @@ class DataManager {
             $item = self::setOwner($item, $player->getName());
             $item = self::setLevel($item, 1);
             $item = self::setExp($item, 0.0);
+            $item = self::setXuid($item, $player->getXuid());
 
             $lore = self::getConfig()->get("lore");
             foreach ($lore as $key => $value) {
