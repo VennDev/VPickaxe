@@ -31,8 +31,8 @@ class PickaxeUpLevelEvent extends Event implements Cancellable {
 
     public function __construct(
         private Player $player,
-        private readonly int $level,
-        private readonly Item $item
+        private int $level,
+        private Item $item
     ) {}
 
     public function getPlayer(): Player {
