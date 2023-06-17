@@ -36,6 +36,7 @@ level-stage:
 
     # The enchantment to give the player when they reach level 2.
     # You can see list enchants here: https://github.com/VennDev/NameEnchantPMMP
+    # In the source code of PMMP comes "enchantment." you should remove it and get their name.
     enchants:
       digging: 'enchant %player% efficiency 1'
 
