@@ -52,6 +52,7 @@ class EventListener implements Listener {
                 $xuid = $player->getXuid();
                 if ($xuid == DataManager::getXuid($item)) {
                     DataManager::updateStats($player);
+                    DataManager::onBreak($player);
                 } else {
                     $event->cancel();
                 }

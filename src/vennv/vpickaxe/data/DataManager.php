@@ -148,6 +148,9 @@ class DataManager {
         return $text;
     }
 
+    /**
+     * @throws \Throwable
+     */
     public static function updateLore(): void {
         foreach (VPickaxe::getInstance()->getServer()->getOnlinePlayers() as $player) {
             $fiber = new \Fiber(function() use ($player) {
@@ -261,18 +264,42 @@ class DataManager {
                                 $haveEnchant[explode("enchantment.", $name)[1]] = $enchant->getLevel();
                             }
                             foreach ($enchants as $name => $enchant) {
-                                if (!isset($haveEnchant[$name])) {
-                                    $namePlayer = $player->getName();
-                                    $command = str_replace("{player}", $namePlayer, $enchant);
-                                    $command = str_replace("%player%", $namePlayer, $command);
-                                    VPickaxe::getInstance()->getServer()->dispatchCommand(new ConsoleCommandSender(VPickaxe::getInstance()->getServer(), VPickaxe::getInstance()->getServer()->getLanguage()), $command);
+                                if (isset($haveEnchant[$name])) {
+                                    if ($haveEnchant[$name] >= $enchant["level"]) {
+                                        continue;
+                                    }
                                 }
+                                $namePlayer = $player->getName();
+                                $command = str_replace("{player}", $namePlayer, $enchant["command"]);
+                                $command = str_replace("%player%", $namePlayer, $command);
+                                VPickaxe::getInstance()->getServer()->dispatchCommand(new ConsoleCommandSender(VPickaxe::getInstance()->getServer(), VPickaxe::getInstance()->getServer()->getLanguage()), $command);
                             }
                         }
                     }
                 }
             });
             $fiber->start();
+        }
+    }
+
+    public static function onBreak(Player $player) : void {
+        $item = $player->getInventory()->getItemInHand();
+        $hasPickaxe = self::hasPickaxe($player);
+        if ($hasPickaxe) {
+            $isPickaxe = self::isPickaxe($item);
+            if ($isPickaxe) {
+                $level = self::getLevel($item);
+                $config = self::getConfig()->get("level-stage");
+                if (isset($config[$level])) {
+                    $data = $config[$level];
+                    if (isset($data["rewards-on-break-block"])) {
+                        $mData = $data["rewards-on-break-block"];
+                        if (rand(0, 100) <= $mData["chance"]) {
+                            self::runCommand($player, $mData);
+                        }
+                    }
+                }
+            }
         }
     }
 

@@ -27,7 +27,19 @@ level-stage:
     # You can see list enchants here: https://github.com/VennDev/NameEnchantPMMP
     # In the source code of PMMP comes "enchantment." you should remove it and get their name.
     enchants:
-      digging: 'enchant %player% efficiency 1'
+      digging:
+        level: 1
+        command: 'enchant %player% efficiency 1'
+
+    # When the player breaks a block, they will receive a reward.
+    rewards-on-break-block:
+      chance: 10 # The chance to receive a reward. If you want to receive a reward every time, set it to 100.
+      random-mode: true
+      random-count: 1
+      commands:
+        - 'give %player% diamond 1'
+        - 'give %player% iron_ingot 1'
+        - 'give %player% gold_ingot 1'
 
     # The command always to run when the player reaches level 2.
     always-run-command:
