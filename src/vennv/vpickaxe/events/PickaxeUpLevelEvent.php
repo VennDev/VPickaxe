@@ -30,7 +30,7 @@ class PickaxeUpLevelEvent extends Event implements Cancellable {
     use CancellableTrait;
 
     public function __construct(
-        private readonly Player $player,
+        private Player $player,
         private readonly int $level,
         private readonly Item $item
     ) {}
