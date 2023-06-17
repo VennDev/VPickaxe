@@ -45,17 +45,13 @@ class EventListener implements Listener {
     public function onBreak(BlockBreakEvent $event): void {
         $player = $event->getPlayer();
         $item = $player->getInventory()->getItemInHand();
-        $hasPickaxe = DataManager::hasPickaxe($player);
-        if ($hasPickaxe) {
-            $isPickaxe = DataManager::isPickaxe($item);
-            if ($isPickaxe) {
-                $xuid = $player->getXuid();
-                if ($xuid == DataManager::getXuid($item)) {
-                    DataManager::updateStats($player);
-                    DataManager::onBreak($player);
-                } else {
-                    $event->cancel();
-                }
+        if (DataManager::checkHavePremium($player)) {
+            $xuid = $player->getXuid();
+            if ($xuid == DataManager::getXuid($item)) {
+                DataManager::updateStats($player);
+                DataManager::onBreak($player);
+            } else {
+                $event->cancel();
             }
         }
     }
