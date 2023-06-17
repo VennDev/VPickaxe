@@ -55,3 +55,7 @@ level-stage:
 
 # Images
 <img src="https://github.com/VennDev/images/blob/main/VPickaxe.png" alt="VPickaxe" height="300" width="400" />
+
+# Credits
+- Email: pnam5005@gmail.com
+- Paypal: lifeboat909@gmail.com
