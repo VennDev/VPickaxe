@@ -1,0 +1,5 @@
+name: VPickaxe
+api: 5.0.0
+author: VennVDev
+main: vennv\vpickaxe\VPickaxe
+version: 1.0.0
