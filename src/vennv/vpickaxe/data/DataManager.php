@@ -283,24 +283,27 @@ class DataManager {
     }
 
     public static function onBreak(Player $player) : void {
-        $item = $player->getInventory()->getItemInHand();
-        $hasPickaxe = self::hasPickaxe($player);
-        if ($hasPickaxe) {
-            $isPickaxe = self::isPickaxe($item);
-            if ($isPickaxe) {
-                $level = self::getLevel($item);
-                $config = self::getConfig()->get("level-stage");
-                if (isset($config[$level])) {
-                    $data = $config[$level];
-                    if (isset($data["rewards-on-break-block"])) {
-                        $mData = $data["rewards-on-break-block"];
-                        if (rand(0, 100) <= $mData["chance"]) {
-                            self::runCommand($player, $mData);
+        $fiber = new \Fiber(function() use ($player) {
+            $item = $player->getInventory()->getItemInHand();
+            $hasPickaxe = self::hasPickaxe($player);
+            if ($hasPickaxe) {
+                $isPickaxe = self::isPickaxe($item);
+                if ($isPickaxe) {
+                    $level = self::getLevel($item);
+                    $config = self::getConfig()->get("level-stage");
+                    if (isset($config[$level])) {
+                        $data = $config[$level];
+                        if (isset($data["rewards-on-break-block"])) {
+                            $mData = $data["rewards-on-break-block"];
+                            if (rand(0, 100) <= $mData["chance"]) {
+                                self::runCommand($player, $mData);
+                            }
                         }
                     }
                 }
             }
-        }
+        });
+        $fiber->start();
     }
 
 }
