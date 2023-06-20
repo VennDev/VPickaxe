@@ -21,7 +21,6 @@
 namespace vennv\vpickaxe\data;
 
 use pocketmine\item\Durable;
-use pocketmine\lang\KnownTranslationFactory;
 use pocketmine\console\ConsoleCommandSender;
 use pocketmine\item\Item;
 use pocketmine\lang\Translatable;
@@ -169,8 +168,10 @@ class DataManager {
      * @throws \Throwable
      */
     public static function updateLore(): void {
+        $fibers = [];
         foreach (VPickaxe::getInstance()->getServer()->getOnlinePlayers() as $player) {
             $fiber = new \Fiber(function() use ($player) {
+                \Fiber::suspend(microtime(true) . $player->getName());
                 $item = $player->getInventory()->getItemInHand();
                 if (self::checkHavePremium($player)) {
                     $lore = $item->getLore();
@@ -182,6 +183,10 @@ class DataManager {
                 }
             });
             $fiber->start();
+            $fibers[] = $fiber;
+        }
+        foreach ($fibers as $fiber) {
+            $fiber->resume();
         }
     }
 
@@ -190,8 +195,8 @@ class DataManager {
      */
     public static function updateStats(Player $player): void {
         $fiber = new \Fiber(function() use ($player) {
+            \Fiber::suspend(microtime(true) . $player->getName());
             $item = $player->getInventory()->getItemInHand();
-            $hasPickaxe = self::hasPickaxe($player);
             if (self::checkHavePremium($player)) {
                 $exp = self::getExp($item);
                 $level = self::getLevel($item);
@@ -222,6 +227,7 @@ class DataManager {
             }
         });
         $fiber->start();
+        $fiber->resume();
     }
 
     public static function runCommand(Player $player, array $mData) : void {
@@ -249,8 +255,10 @@ class DataManager {
      * @throws \Throwable
      */
     public static function getCommands(): void {
+        $fibers = [];
         foreach (VPickaxe::getInstance()->getServer()->getOnlinePlayers() as $player) {
             $fiber = new \Fiber(function() use ($player) {
+                \Fiber::suspend(microtime(true) . $player->getName());
                 $item = $player->getInventory()->getItemInHand();
                 if (self::checkHavePremium($player)) {
                     $config = self::getConfig()->get("level-stage");
@@ -285,6 +293,10 @@ class DataManager {
                 }
             });
             $fiber->start();
+            $fibers[] = $fiber;
+        }
+        foreach ($fibers as $fiber) {
+            $fiber->resume();
         }
     }
 
@@ -293,6 +305,7 @@ class DataManager {
      */
     public static function onBreak(Player $player) : void {
         $fiber = new \Fiber(function() use ($player) {
+            \Fiber::suspend(microtime(true) . $player->getName());
             $item = $player->getInventory()->getItemInHand();
             if (self::checkHavePremium($player)) {
                 $level = self::getLevel($item);
@@ -309,6 +322,7 @@ class DataManager {
             }
         });
         $fiber->start();
+        $fiber->resume();
     }
 
 }
