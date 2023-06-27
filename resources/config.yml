@@ -14,7 +14,7 @@ lore:
 formula: 5
 
 # Max level of the player.
-max-level: 100
+max-level: 2
 
 # Settings for level stage.
 level-stage:
