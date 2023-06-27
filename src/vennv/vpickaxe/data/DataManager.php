@@ -172,7 +172,6 @@ class DataManager {
         $async = new Async();
         foreach (VPickaxe::getInstance()->getServer()->getOnlinePlayers() as $player) {
             $async->await(new \Fiber(function() use ($player) {
-                \Fiber::suspend(microtime(true) . $player->getName());
                 $item = $player->getInventory()->getItemInHand();
                 if (self::checkHavePremium($player)) {
                     $lore = $item->getLore();
