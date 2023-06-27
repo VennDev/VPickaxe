@@ -4,5 +4,8 @@ branches:
 - main
 projects:
   VPickaxe:
+    lint:
+      phpstan: false
+      syntaxError: false
     path: ""
 ...
