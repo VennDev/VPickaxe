@@ -5,7 +5,6 @@
 
 # Features
 - Integrate and use everything based on commands to execute according to the level that you have.
-- It's all done on asynchronous which makes the plugin lightweight.
 
 # Config
 ```config
