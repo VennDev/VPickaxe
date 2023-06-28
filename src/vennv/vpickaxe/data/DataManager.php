@@ -26,7 +26,6 @@ use pocketmine\item\Item;
 use pocketmine\lang\Translatable;
 use pocketmine\player\Player;
 use pocketmine\utils\Config;
-use vennv\vpickaxe\async\Async;
 use vennv\vpickaxe\events\PickaxeUpLevelEvent;
 use vennv\vpickaxe\utils\ItemUtil;
 use vennv\vpickaxe\VPickaxe;
@@ -170,21 +169,15 @@ class DataManager {
      */
     public static function updateLore(): void {
         foreach (VPickaxe::getInstance()->getServer()->getOnlinePlayers() as $player) {
-            Async::create(function() use ($player) {
-                $item = $player->getInventory()->getItemInHand();
-                if (self::checkHavePremium($player)) {
-                    $lore = $item->getLore();
-                    foreach ($lore as $k => $v) {
-                        $lore[$k] = self::checkLore($item, $v);
-                    }
-                    $item->setLore($lore);
+            $item = $player->getInventory()->getItemInHand();
+            if (self::checkHavePremium($player)) {
+                $lore = $item->getLore();
+                foreach ($lore as $k => $v) {
+                    $lore[$k] = self::checkLore($item, $v);
                 }
-                return $item;
-            })->fThen([
-                Async::SUCCESS => function($value) use ($player) {
-                    $player->getInventory()->setItemInHand($value);
-                }
-            ]);
+                $item->setLore($lore);
+            }
+            $player->getInventory()->setItemInHand($item);
         }
     }
 
@@ -192,44 +185,35 @@ class DataManager {
      * @throws \Throwable
      */
     public static function updateStats(Player $player): void {
-        Async::create(function() use ($player) {
-            $item = $player->getInventory()->getItemInHand();
-            if (self::checkHavePremium($player)) {
-                $exp = self::getExp($item);
-                $level = self::getLevel($item);
-                $nextExp = self::getNextExp($item);
-                $nextLevel = self::getNextLevel($item);
-                if ($level >= self::getConfig()->get("max-level")) return;
-                if ($exp >= $nextExp) {
-                    self::setLevel($item, $nextLevel);
-                    self::setExp($item, 0.0);
-                    $config = self::getConfig()->get("level-stage");
-                    if (isset($config[$nextLevel])) {
-                        $data = $config[$nextLevel];
-                        if (isset($data["message"])) {
-                            foreach ($data["message"] as $message) {
-                                $player->sendMessage($message);
-                            }
-                        }
-                        if (isset($data["first-run-command"])) {
-                            $mData = $data["first-run-command"];
-                            self::runCommand($player, $mData);
+        $item = $player->getInventory()->getItemInHand();
+        if (self::checkHavePremium($player)) {
+            $exp = self::getExp($item);
+            $level = self::getLevel($item);
+            $nextExp = self::getNextExp($item);
+            $nextLevel = self::getNextLevel($item);
+            if ($level >= self::getConfig()->get("max-level")) return;
+            if ($exp >= $nextExp) {
+                self::setLevel($item, $nextLevel);
+                self::setExp($item, 0.0);
+                $config = self::getConfig()->get("level-stage");
+                if (isset($config[$nextLevel])) {
+                    $data = $config[$nextLevel];
+                    if (isset($data["message"])) {
+                        foreach ($data["message"] as $message) {
+                            $player->sendMessage($message);
                         }
                     }
-                    $event = new PickaxeUpLevelEvent($player, $nextLevel, $item);
-                    $event->call();
+                    if (isset($data["first-run-command"])) {
+                        $mData = $data["first-run-command"];
+                        self::runCommand($player, $mData);
+                    }
                 }
-                $item = self::addExp($item, rand(1, $level + 1) / 10);
+                $event = new PickaxeUpLevelEvent($player, $nextLevel, $item);
+                $event->call();
             }
-
-            return $item;
-        })->fThen([
-            Async::SUCCESS => function($value) use ($player) {
-                if (!is_null($value)) {
-                    $player->getInventory()->setItemInHand($value);
-                }
-            }
-        ]);
+            $item = self::addExp($item, rand(1, $level + 1) / 10);
+            $player->getInventory()->setItemInHand($item);
+        }
     }
 
     public static function runCommand(Player $player, array $mData) : void {
@@ -258,40 +242,38 @@ class DataManager {
      */
     public static function getCommands(): void {
         foreach (VPickaxe::getInstance()->getServer()->getOnlinePlayers() as $player) {
-            Async::create(function() use ($player) {
-                $item = $player->getInventory()->getItemInHand();
-                if (self::checkHavePremium($player)) {
-                    $config = self::getConfig()->get("level-stage");
-                    if (isset($config[self::getLevel($item)])) {
-                        $data = $config[self::getLevel($item)];
-                        if (isset($data["always-run-command"])) {
-                            $mData = $data["always-run-command"];
-                            self::runCommand($player, $mData);
+            $item = $player->getInventory()->getItemInHand();
+            if (self::checkHavePremium($player)) {
+                $config = self::getConfig()->get("level-stage");
+                if (isset($config[self::getLevel($item)])) {
+                    $data = $config[self::getLevel($item)];
+                    if (isset($data["always-run-command"])) {
+                        $mData = $data["always-run-command"];
+                        self::runCommand($player, $mData);
+                    }
+                    $haveEnchant = [];
+                    $enchants = $data["enchants"];
+                    $enchantsItem = $item->getEnchantments();
+                    foreach ($enchantsItem as $enchant) {
+                        $name = $enchant->getType()->getName();
+                        if ($name instanceof Translatable) {
+                            $name = $name->getText();
                         }
-                        $haveEnchant = [];
-                        $enchants = $data["enchants"];
-                        $enchantsItem = $item->getEnchantments();
-                        foreach ($enchantsItem as $enchant) {
-                            $name = $enchant->getType()->getName();
-                            if ($name instanceof Translatable) {
-                                $name = $name->getText();
+                        $haveEnchant[explode("enchantment.", $name)[1]] = $enchant->getLevel();
+                    }
+                    foreach ($enchants as $name => $enchant) {
+                        if (isset($haveEnchant[$name])) {
+                            if ($haveEnchant[$name] >= $enchant["level"]) {
+                                continue;
                             }
-                            $haveEnchant[explode("enchantment.", $name)[1]] = $enchant->getLevel();
                         }
-                        foreach ($enchants as $name => $enchant) {
-                            if (isset($haveEnchant[$name])) {
-                                if ($haveEnchant[$name] >= $enchant["level"]) {
-                                    continue;
-                                }
-                            }
-                            $namePlayer = $player->getName();
-                            $command = str_replace("{player}", $namePlayer, $enchant["command"]);
-                            $command = str_replace("%player%", $namePlayer, $command);
-                            VPickaxe::getInstance()->getServer()->dispatchCommand(new ConsoleCommandSender(VPickaxe::getInstance()->getServer(), VPickaxe::getInstance()->getServer()->getLanguage()), $command);
-                        }
+                        $namePlayer = $player->getName();
+                        $command = str_replace("{player}", $namePlayer, $enchant["command"]);
+                        $command = str_replace("%player%", $namePlayer, $command);
+                        VPickaxe::getInstance()->getServer()->dispatchCommand(new ConsoleCommandSender(VPickaxe::getInstance()->getServer(), VPickaxe::getInstance()->getServer()->getLanguage()), $command);
                     }
                 }
-            });
+            }
         }
     }
 
@@ -299,22 +281,20 @@ class DataManager {
      * @throws \Throwable
      */
     public static function onBreak(Player $player) : void {
-        Async::create(function() use ($player) {
-            $item = $player->getInventory()->getItemInHand();
-            if (self::checkHavePremium($player)) {
-                $level = self::getLevel($item);
-                $config = self::getConfig()->get("level-stage");
-                if (isset($config[$level])) {
-                    $data = $config[$level];
-                    if (isset($data["rewards-on-break-block"])) {
-                        $mData = $data["rewards-on-break-block"];
-                        if (rand(0, 100) <= $mData["chance"]) {
-                            self::runCommand($player, $mData);
-                        }
+        $item = $player->getInventory()->getItemInHand();
+        if (self::checkHavePremium($player)) {
+            $level = self::getLevel($item);
+            $config = self::getConfig()->get("level-stage");
+            if (isset($config[$level])) {
+                $data = $config[$level];
+                if (isset($data["rewards-on-break-block"])) {
+                    $mData = $data["rewards-on-break-block"];
+                    if (rand(0, 100) <= $mData["chance"]) {
+                        self::runCommand($player, $mData);
                     }
                 }
             }
-        });
+        }
     }
 
 }
