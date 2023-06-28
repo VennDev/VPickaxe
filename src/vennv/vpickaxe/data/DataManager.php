@@ -169,9 +169,8 @@ class DataManager {
      * @throws \Throwable
      */
     public static function updateLore(): void {
-        $async = new Async();
         foreach (VPickaxe::getInstance()->getServer()->getOnlinePlayers() as $player) {
-            $async->await(new \Fiber(function() use ($player) {
+            Async::create(function() use ($player) {
                 $item = $player->getInventory()->getItemInHand();
                 if (self::checkHavePremium($player)) {
                     $lore = $item->getLore();
@@ -179,19 +178,21 @@ class DataManager {
                         $lore[$k] = self::checkLore($item, $v);
                     }
                     $item->setLore($lore);
-                    $player->getInventory()->setItemInHand($item);
                 }
-            }));
+                return $item;
+            })->fThen([
+                Async::SUCCESS => function($value) use ($player) {
+                    $player->getInventory()->setItemInHand($value);
+                }
+            ]);
         }
-        $async->run();
     }
 
     /**
      * @throws \Throwable
      */
     public static function updateStats(Player $player): void {
-        $async = new Async();
-        $async->await(new \Fiber(function() use ($player) {
+        Async::create(function() use ($player) {
             $item = $player->getInventory()->getItemInHand();
             if (self::checkHavePremium($player)) {
                 $exp = self::getExp($item);
@@ -219,10 +220,16 @@ class DataManager {
                     $event->call();
                 }
                 $item = self::addExp($item, rand(1, $level + 1) / 10);
-                $player->getInventory()->setItemInHand($item);
             }
-        }));
-        $async->run();
+
+            return $item;
+        })->fThen([
+            Async::SUCCESS => function($value) use ($player) {
+                if (!is_null($value)) {
+                    $player->getInventory()->setItemInHand($value);
+                }
+            }
+        ]);
     }
 
     public static function runCommand(Player $player, array $mData) : void {
@@ -250,9 +257,8 @@ class DataManager {
      * @throws \Throwable
      */
     public static function getCommands(): void {
-        $async = new Async();
         foreach (VPickaxe::getInstance()->getServer()->getOnlinePlayers() as $player) {
-            $async->await(new \Fiber(function() use ($player) {
+            Async::create(function() use ($player) {
                 $item = $player->getInventory()->getItemInHand();
                 if (self::checkHavePremium($player)) {
                     $config = self::getConfig()->get("level-stage");
@@ -285,17 +291,15 @@ class DataManager {
                         }
                     }
                 }
-            }));
+            });
         }
-        $async->run();
     }
 
     /**
      * @throws \Throwable
      */
     public static function onBreak(Player $player) : void {
-        $async = new Async();
-        $async->await(new \Fiber(function() use ($player) {
+        Async::create(function() use ($player) {
             $item = $player->getInventory()->getItemInHand();
             if (self::checkHavePremium($player)) {
                 $level = self::getLevel($item);
@@ -310,8 +314,7 @@ class DataManager {
                     }
                 }
             }
-        }));
-        $async->run();
+        });
     }
 
 }

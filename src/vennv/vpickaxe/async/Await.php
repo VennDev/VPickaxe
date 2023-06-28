@@ -18,6 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+// Resource: https://github.com/VennDev/AsyncPHP
+
 namespace vennv\vpickaxe\async;
 
 final class Await {
